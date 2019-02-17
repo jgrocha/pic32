@@ -1,0 +1,4 @@
+RoqDryPlusV3.4	- 3 de Fevereiro de 2015
+
+-A pedido do cliente a fonte dos números grandes foi alterada
+-Configuração de uma interrupção para efetuar a leitura das teclas mais rapidamente

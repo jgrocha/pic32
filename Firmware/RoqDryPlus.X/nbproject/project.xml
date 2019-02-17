@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>com.microchip.mplab.nbide.embedded.makeproject</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/make-project/1">
+            <name>RoqDryPlus 3.8</name>
+            <creation-uuid>1d0c4511-ac84-4a04-bed4-003ed11b7c40</creation-uuid>
+            <make-project-type>0</make-project-type>
+            <c-extensions>c</c-extensions>
+            <cpp-extensions/>
+            <header-extensions>h</header-extensions>
+            <asminc-extensions/>
+            <sourceEncoding>ISO-8859-15</sourceEncoding>
+            <sourceRootList>
+                <sourceRootElem>..</sourceRootElem>
+                <sourceRootElem>../../Microchip/Include/MDD File System</sourceRootElem>
+                <sourceRootElem>../../Microchip/Include/USB</sourceRootElem>
+                <sourceRootElem>../../Microchip/MDD File System</sourceRootElem>
+                <sourceRootElem>../../Microchip/USB</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>default</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
+            <make-dep-projects/>
+        </data>
+    </configuration>
+</project>

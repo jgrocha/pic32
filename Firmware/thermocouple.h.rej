@@ -1,0 +1,14 @@
+diff a/Firmware/thermocouple.h b/Firmware/thermocouple.h	(rejected hunks)
+@@ -38,4 +38,12 @@
+ //Set the configuration to AIN2/AIN3, FS=+/-0.256, SS, DR=128sps, PULLUP on DOUT
+ #define ADSCON_CH1			   (0xBB8A)
+ 
++/* Functions */
++int thermocouple_writeSpi (unsigned int config, int mode);
++void thermocouple_begin(unsigned int mode, unsigned int channel);
++int thermocouple_ADSread(unsigned int mode, unsigned int channel);
++int thermocouple_localCompensation(int local_code);
++int thermocouple_ADCcode2temp(int code);
++double thermocouple_readCelcius(unsigned int channel); 
++
+ #endif
