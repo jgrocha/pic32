@@ -54,6 +54,7 @@
  ********************************************************************/
 
 /** INCLUDES *******************************************************/
+#include <math.h>
 #include "USB/usb.h"
 #include "./USB/usb_function_msd.h"
 
@@ -211,9 +212,45 @@ extern unsigned char TESTE_DO_BRITO;
 const char *DELIMITERS = {" /,"};
 
 /*
+led/1 on
+led/2 on
+led/3 on
+led/4 on
+led/5 on
+led/6 on
+led/7 on
+led/8 on
+led/9 on
+led/10 on
+led/11 on
 led/12 on
+led/13 on
+led/14 on
+led/15 on
+led/16 on
+ * 
+ * 
+ * 
+led/1 off
+led/2 off
+led/3 off
+led/4 off
+led/5 off
+led/6 off
+led/7 off
+led/8 off
+led/9 off
+led/10 off
+led/11 off
+led/12 off
+ * 
+ * 
+led/10 on
+led/5 onled/12 on
 led/10 on
 led/5 on
+ * 
+ * 
 led/12 off
 led/10 off
 led/5 off
@@ -224,13 +261,19 @@ led/20 on
 // buzzer/p 1
 // buzzer/p 3
 
-// time  
+// dout/3 on
+// din/3 on ???
+
+// por fazer
+// time  ???
 
 void executaMensagem(char *mensagem) {
     char *partes[10];
     int numdepartes = 0, k;
 
-    int led, ciclos;
+    int led, ciclos, din, dacout;
+    float tensao;
+    unsigned char dinstatus = 0;
 
     char* copia = strdup(mensagem);
     char *token = strtok(copia, " /,");
@@ -242,10 +285,12 @@ void executaMensagem(char *mensagem) {
         token = strtok(NULL, " /,");
     }
 
-    for (k = 0; k < numdepartes; k++) {
-        printf("Parte: %s\n", partes[k]);
-    }
+    //    for (k = 0; k < numdepartes; k++) {
+    //        printf("Parte: %s\n", partes[k]);
+    //    }
 
+    // leds = digital output
+    // leds a funcionar: 3,4,6,7,9,10,14,15,16
     if (numdepartes == 3 && strcmp(partes[0], "led") == 0) {
         led = atoi(partes[1]);
         if (led >= 1 && led <= 17) {
@@ -254,6 +299,29 @@ void executaMensagem(char *mensagem) {
             } else {
                 ioOutputCtrl(led, 0);
             }
+            printf("%s done\n", mensagem);
+        }
+    }
+
+    if (numdepartes == 2 && strcmp(partes[0], "din") == 0) {
+        din = atoi(partes[1]);
+        if (din >= 1 && din <= 16) {
+            dinstatus = ioInputStatus(din);
+            // printf("Entrada %d status %d\n", din, dinstatus);
+            printf("din/%d %d\n", din, dinstatus);
+            // printf("%s done\n", mensagem);
+        }
+    }
+
+    // digital-to-analog (DAC)
+    // dacout/1 5.0
+    if (numdepartes == 3 && strcmp(partes[0], "dacout") == 0) {
+        dacout = atoi(partes[1]);
+        tensao = atof(partes[2]);
+        if ((dacout >= 1 && dacout <= 2) && (tensao >= 0.0 && tensao <= 10.0)) {
+            ioAnalogOutput(tensao, dacout);
+            // printf("Tensao %f na saida DACOUT%d\n", tensao, dacout);
+            printf("%s done\n", mensagem);
         }
     }
 
@@ -268,6 +336,7 @@ void executaMensagem(char *mensagem) {
                 if (ciclos)
                     Delayms(100);
             }
+            printf("%s done\n", mensagem);
         }
     }
 
@@ -281,7 +350,7 @@ struct Node* processaMensagens(struct Node *cabeca) {
         return NULL;
     } else {
         if (cabeca->next == NULL) {
-            printf("Vai processar %s...", cabeca->mensagem);
+            printf("%s todo\n", cabeca->mensagem);
             executaMensagem(cabeca->mensagem);
             free(cabeca->mensagem);
             free(cabeca);
@@ -290,7 +359,7 @@ struct Node* processaMensagens(struct Node *cabeca) {
             penultimo = cabeca;
             while (penultimo->next->next != NULL)
                 penultimo = penultimo->next;
-            printf("Vai processar %s...", penultimo->next->mensagem);
+            printf("%s todo\n", penultimo->next->mensagem);
             executaMensagem(penultimo->next->mensagem);
             free(penultimo->next->mensagem);
             free(penultimo->next);
@@ -404,22 +473,22 @@ int main(void) {
 
 
 #ifdef DEBUG_SD1
-    /*Testing MicroSD Nº1********************************************************************/
-    //Utilizando as funções FSIO
+    /*Testing MicroSD N.1********************************************************************/
+    //Utilizando as funcoes FSIO
     while (!FSInit());
 
     printf("\n************************************************************************");
-    printf("\nTESTE DO SD CARD Nº1: \n");
+    printf("\nTESTE DO SD CARD N.1: \n");
 
     // Criar um novo ficheiro .txt
     pointer = FSfopen("TEST.TXT", "w");
     if (pointer == NULL) {
-        printf("\nNão é possível abrir o ficheiro!\n");
+        printf("\nNao e possivel abrir o ficheiro!\n");
     }
 
     // Escrever no ficheiro Test.txt
     if (FSfwrite(sendString, 1, 22, pointer) != 22) {
-        printf("\nNão foi possível escrever no ficheiro!\n");
+        printf("\nNao foi possivel escrever no ficheiro!\n");
     } else {
         printf("\nEscrita efectuada com sucesso!\n");
     }
@@ -428,12 +497,12 @@ int main(void) {
     // It can also set the position of a file forward from the
     // beginning or forward from the current position
     if (FSfseek(pointer, 1, SEEK_END) != 0) {
-        printf("\nErro na função Fsfseek!\n");
+        printf("\nErro na funcao Fsfseek!\n");
     }
 
     // Write at the end of the string
     if (FSfwrite(tx, 1, 5, pointer) != 5) {
-        printf("\nNão foi possível escrever no ficheiro!\n");
+        printf("\nNao foi possivel escrever no ficheiro!\n");
     } else {
         printf("\nEscrita efectuada com sucesso!\n");
     }
@@ -446,7 +515,7 @@ int main(void) {
     // Abrir o ficheiro em modo de leitura
     pointer = FSfopen("TEST.TXT", "r");
     if (pointer == NULL) {
-        printf("\nNão foi possível abrir o ficheiro!\n");
+        printf("\nNao foi possivel abrir o ficheiro!\n");
     }
 
     // Ler 4 bytes do ficheiro
@@ -459,7 +528,7 @@ int main(void) {
         printf("\nErro a fechar o ficheiro!\n");
     }
 
-    // Testar se as leituras efectuadas estão correctas
+    // Testar se as leituras efectuadas estao correctas
     if ((receiveBuffer[0] != 'T') ||
             (receiveBuffer[1] != 'h') ||
             (receiveBuffer[2] != 'i') ||
@@ -469,22 +538,22 @@ int main(void) {
         printf("\nLeitura correcta!\n");
     }
 
-    // Criar árvore de diretórios
+    // Criar arvore de diretorios
     if ((FSmkdir("ONE")) == 0) {
-        printf("\nDiretório criado!\n");
+        printf("\nDiretorio criado!\n");
     }
 
-    // Mudar para o diretório ONE 
+    // Mudar para o diretorio ONE 
     if (FSchdir("ONE") != 0) {
         printf("\nErro!\n");
     }
 
-    // Criar novo diretório dentro da pasta ONE
+    // Criar novo diretorio dentro da pasta ONE
     if ((FSmkdir("TWO")) == 0) {
-        printf("\nDiretório criado!\n");
+        printf("\nDiretorio criado!\n");
     }
 
-    // Criar novo ficheiro no diretório ONE
+    // Criar novo ficheiro no diretorio ONE
     pointer = FSfopen("NEWFILE.TXT", "w");
 
     // Fechar o ficheiro 
@@ -498,16 +567,16 @@ int main(void) {
 #endif
 
 #ifdef DEBUG_SD2
-    /*Testing MicroSD Nº2*******************************************************************/
-    // Escrita e leitura diretamente na memória do cartão SD - não é possível aceder pelo PC 
+    /*Testing MicroSD N.2*******************************************************************/
+    // Escrita e leitura diretamente na memoria do cartao SD - nao e possivel aceder pelo PC 
 
     while (!FSInit());
 
     printf("\n************************************************************************");
-    printf("\nTESTE DO SD CARD Nº2: \n");
+    printf("\nTESTE DO SD CARD N.2: \n");
 
 
-    //Preencher o buffer de 512 para escrever no cartão
+    //Preencher o buffer de 512 para escrever no cartao
     for (li = 0; li < 256; li++) {
         buffer_sd[li] = 5;
     }
@@ -516,22 +585,22 @@ int main(void) {
         buffer_sd[li] = 2;
     }
 
-    // Escrever na posição 0x00000001 do cartão a informação contida no buffer_sd
+    // Escrever na posicao 0x00000001 do cartao a informacao contida no buffer_sd
     li = MDD_SDSPI_SectorWrite(0x00000001, buffer_sd, 0x00);
 
     // Verificar se a escrita foi efectuada com sucesso
     if (li > 0) {
-        printf("Escrita no cartão efectuada com sucesso!\n");
+        printf("Escrita no cartao efectuada com sucesso!\n");
     } else {
-        printf("Escrita no cartão falhada!\n");
+        printf("Escrita no cartao falhada!\n");
 
     }
 
-    // Leitura do cartão
+    // Leitura do cartao
     MDD_SDSPI_SectorRead(0x00000001, buffer_lido);
 
-    // Impressão do conteúdo lido
-    printf("Conteúdo do buffer:");
+    // Impressao do conteudo lido
+    printf("Conteudo do buffer:");
     for (li = 0; li < 512; li++) {
         printf(" %d ", buffer_lido[li]);
     }
@@ -542,19 +611,19 @@ int main(void) {
 #endif
 
 #ifdef DEBUG_SD3
-    /*Testing MicroSD Nº3********************************************************************/
-    // Depois de efectuar alterações nos ficheiros de texto através do computador
+    /*Testing MicroSD N.3********************************************************************/
+    // Depois de efectuar alteracoes nos ficheiros de texto atraves do computador
 
     while (!FSInit());
 
     printf("\n************************************************************************");
-    printf("\nTESTE DO SD CARD Nº3: \n");
+    printf("\nTESTE DO SD CARD N.3: \n");
 
 
     // Abrir o ficheiro em modo de leitura
     pointer = FSfopen("TEST.TXT", "r");
     if (pointer == NULL) {
-        printf("\nNão foi possível abrir o ficheiro!\n");
+        printf("\nNao foi possivel abrir o ficheiro!\n");
     }
 
     // Ler 4 bytes do ficheiro
@@ -567,7 +636,7 @@ int main(void) {
         printf("\nErro a fechar o ficheiro!\n");
     }
 
-    // Verificar se as leituras estão correctas
+    // Verificar se as leituras estao correctas
     if ((receiveBuffer[0] != '1') ||
             (receiveBuffer[1] != '5') ||
             (receiveBuffer[2] != '4') ||
@@ -691,7 +760,7 @@ void UserInit(void) {
 
     unsigned char Inputs = 0;
     /***********************************************************************************/
-    /***Não esquecer de comentar - 3 DE FEV 2015*****************************************/
+    /***Nao esquecer de comentar - 3 DE FEV 2015*****************************************/
     /***********************************************************************************/
     /***********************************************************************************/
     /***********************************************************************************/
@@ -742,7 +811,7 @@ void UserInit(void) {
     // Time: 15:33:00
 
     /***********************************************************************************/
-    /****Configuração do timer - 3 DE FEV 2015******************************************/
+    /****Configuracao do timer - 3 DE FEV 2015******************************************/
     /***********************************************************************************/
     /***********************************************************************************/
     /* Configure Timer 1 using internal clock, 1:256 prescale***************************/
@@ -760,16 +829,17 @@ void UserInit(void) {
     INTEnableInterrupts();
 
     /*Testing UART2*********************************************************************/
-    printf("\nBraga\n");
-    sprintf(str, compilingDate);
-    printf("%s - ", str);
-    sprintf(str, compilingTime);
-    printf(str);
-    printf("\nHardware: José Camelo / Elton Ferreira\nFirmware: Miguel Ribeiro / Miguel Brito / Ana Santos\n");
+    //    printf("\nBraga\n");
+    //    sprintf(str, compilingDate);
+    printf("geomaster/compiling/date %s\n", compilingDate);
+    printf("geomaster/compiling/time %s\n", compilingTime);
+    //    sprintf(str, compilingTime);
+    //    printf(str);
+    //    printf("\nHardware: Jose Camelo / Elton Ferreira\nFirmware: Miguel Ribeiro / Miguel Brito / Ana Santos\n");
 
     /*Testing RTC***********************************************************************/
     rtcRead();
-    rtcPrintTimeDate();
+//    rtcPrintTimeDate();
 
     /*Initialize the variable holding the handle for the last transmission**************/
     USBOutHandle = 0;
@@ -844,11 +914,11 @@ void UserInit(void) {
         }
 
         switch (Inputs) {
-            case 0: printf("A entrada %d não está activa!\n", li);
+            case 0: printf("A entrada %d nao esta activa!\n", li);
                 break;
-            case 1: printf("A entrada %d está ativa!\n", li);
+            case 1: printf("A entrada %d esta ativa!\n", li);
                 break;
-            case 2: printf("A entrada %d está mal seleccionada!\n", li);
+            case 2: printf("A entrada %d esta mal seleccionada!\n", li);
                 break;
             default: break;
         }
@@ -860,12 +930,12 @@ void UserInit(void) {
 #endif
     }
 
-    /*Teste das saidas analógicas 0-10V***************************************************/
+    /*Teste das saidas analogicas 0-10V***************************************************/
     pwmInit();
-    tensao1 = 10.0;
-    tensao2 = 5.0;
-    ioAnalogOutput(tensao1, 1);
-    ioAnalogOutput(tensao2, 2);
+    //    tensao1 = 10.0;
+    //    tensao2 = 5.0;
+    //    ioAnalogOutput(tensao1, 1);
+    //    ioAnalogOutput(tensao2, 2);
 
 }//end UserInit
 
@@ -890,58 +960,52 @@ void ProcessIO(void) {
     int i;
     static unsigned char lcdon = 0;
     float temp;
-    unsigned char Inputs = 0;
+    unsigned char dinstatus = 0;
+    static unsigned char dinstatus_anterior[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    static int anaCh_anterior[4] = {0, 0, 0, 0};
 
     if (updatetemp) {
         updatetemperature();
         updatetemp = 0;
-
-        systemLedToggle();
+        //        systemLedToggle();
     }
 
     // a cada segundo
     if (flag1S) {
-
         //Toggling System LED
-        systemLedToggle();
+        //        systemLedToggle();
 
         rtcRead();
 
-        if (countSeconds++ >= 10) {
+        if (countSeconds++ == 60) {
             flag1Min = 1;
             countSeconds = 0;
         }
 
-        /*Leitura das entradas analógicas (tensão, corrente e temperatura)******************************/
+        /*Leitura das entradas analogicas (tensao, corrente e temperatura)******************************/
         adcRead();
 
 #ifdef DEBUG_ADC
-        printf("\n************************************************************************");
-        printf("\nLEITURA DAS ENTRADAS ANALÓGICAS: \n");
-        printf("\nADC:\t\t%d\t%d\t%d\t%d\t%d\n", anaCh[0], anaCh[1], anaCh[2], anaCh[3], anaCh[4]);
-        printf("************************************************************************\n\r");
+        //        printf("\nLEITURA DAS ENTRADAS ANALOGICAS: \n");
+        //        printf("\nADC:\t\t%d\t%d\t%d\t%d\t%d\n", anaCh[0], anaCh[1], anaCh[2], anaCh[3], anaCh[4]);
+        for (i = 0; i < 4; i++) {
+            if (anaCh[i] != anaCh_anterior[i]) {
+                anaCh_anterior[i] = anaCh[i];
+                printf("adcout/%d %d\n", i, anaCh[i]);
+            }
+        }
+
 #endif
 
-        /*Teste de Inputs*********************************************************************/
+        for (i = 1; i <= 16; i++) {
+            dinstatus = ioInputStatus(i);
+            if (dinstatus != dinstatus_anterior[i-1]) {
+                dinstatus_anterior[i-1] = dinstatus;
+                printf("din/%d %d\n", i, dinstatus);
+            }
+        }
 
-
-        //printf("\nSegundos: %d",countSeconds);
-
-        //-----------------------------------------------//
-        //---------TESTE DIGITOS GRANDES-----------------//
-        //-----------------------------------------------//
-
-
-        //		INTEnableInterrupts();
-
-        printf("_%d_\n", TESTE_DO_BRITO);
-        //        printf("UART IN: %d de %d\n", UART2RxBufLen, 63);       
-        //        for (i=0; i<UART2RxBufLen; i++) {
-        //            printf("%c", UART2RxBuf[i]);
-        //        }
-        //        printf("\n");
-
-        //        imprimeListaMensagens(head);
+        // imprimeListaMensagens(head);
         // head = processaMensagens(head);
         while (head != NULL)
             head = processaMensagens(head);
@@ -951,22 +1015,8 @@ void ProcessIO(void) {
 
     // a cada minuto
     if (flag1Min) {
-        adcRead();
-        printf("--Minuto--\n");
-
-#ifdef DEBUG_CAN
-        //Teste de envio de uma mensagem CAN (1 byte) (verificar com o osciloscopio)
-        //É enviada uma mensagem CAN de 10 em 10 segundos
-        BYTE message[1];
-        message[0] = 0xE;
-        CAN1TxSendMsg(1, message, 0x202); //Message with 1 byte from SID 0x201 to SID 0x202
-#endif
-
-        //if(isCAN1MsgReceived = TRUE){
-
-
-        //}
-
+//        printf("--Minuto--\n");
+        printf("time/interval/sec 60\n");
         flag1Min = 0;
     }
 
@@ -978,58 +1028,27 @@ void ProcessIO(void) {
 
 void updatetemperature() {
     float temp;
+    static float temp_anterior_1 = -999.9;
+    static float temp_anterior_2 = -999.9;
+
 #ifdef DEBUG_TC
-    /*Teste da leitura efetuada pelos dois termopares*********************************/
-    printf("\n************************************************************************");
-    printf("\nLEITURA DA TEMPERATURA DOS TERMOPARES -  Segundos: %d\n", countsec);
     temp = tcTempRead(1);
-
-    //Check if thermocouplpe is open
-    //		if(temp > 40000.0f){
-    //			INTDisableInterrupts();
-    //			GLCD_GoTo(120,2);
-    //			sprintf(str,"T1: Na   ");
-    //			GLCD_WriteString(str,1);
-    //			//printf("\nT2: %.2f %d %d %d %d %d\n", temp, tc.sign, tc.fault, tc.scv, tc.scg, tc.oc);
-    //			INTEnableInterrupts();
-    //		}else{
-    //			INTDisableInterrupts();
-    //			GLCD_GoTo(120,2);
-    //			sprintf(str,"T1:%.1f",temp);
-    //			GLCD_WriteString(str,1);
-    //			//printf("T1: %.2f %d %d %d %d %d", temp, tc.sign, tc.fault, tc.scv, tc.scg, tc.oc);
-    //			INTEnableInterrupts();
-    //		
-    //		}
-
-    printf("\nT1: %.2f \n", temp);
-
+    temp = floorf(temp * 10) / 10;
+    if (temp < 40000.0f) {
+        if (temp != temp_anterior_1) {
+            temp_anterior_1 = temp;
+            printf("tmp/1 %.1f\n", temp);
+        }
+    }
     temp = tcTempRead(2);
-
-    //		//Check if thermocouple is open
-    //		if(temp > 40000.0f){
-    //			INTDisableInterrupts();
-    //			GLCD_GoTo(120,3);
-    //			sprintf(str,"T2: Na   ");
-    //			GLCD_WriteString(str,1);
-    //			//printf("\nT2: %.2f %d %d %d %d %d\n", temp, tc.sign, tc.fault, tc.scv, tc.scg, tc.oc);
-    //			INTEnableInterrupts();
-    //
-    //		}else{
-    //
-    //			INTDisableInterrupts();
-    //			GLCD_GoTo(120,3);
-    //			sprintf(str,"T2:%.1f",temp);
-    //			GLCD_WriteString(str,1);
-    //			//printf("\nT2: %.2f %d %d %d %d %d\n", temp, tc.sign, tc.fault, tc.scv, tc.scg, tc.oc);
-    //			INTEnableInterrupts();
-    //
-    //		}
-    printf("\nT2: %.2f \n", temp);
-    printf("************************************************************************\n\r");
-
+    temp = floorf(temp * 10) / 10;
+    if (temp < 40000.0f) {
+        if (temp != temp_anterior_2) {
+            temp_anterior_2 = temp;
+            printf("tmp/2 %.1f\n", temp);
+        }
+    }
 #endif
-
 }
 
 
@@ -1044,7 +1063,7 @@ void __ISR(_CORE_TIMER_VECTOR, IPL2SOFT) CoreTimerHandler(void) {
     // .. things to do
     //flag1S = 1; 
 
-    // update the period - interrupts every 1/CORE_TICK_RATE - a cada 1s é gerada uma interrupção
+    // update the period - interrupts every 1/CORE_TICK_RATE - a cada 1s e gerada uma interrupcao
     //UpdateCoreTimer(CORE_TICK_RATE);
 }
 
@@ -1073,12 +1092,12 @@ void __ISR(_TIMER_1_VECTOR, IPL2AUTO) Timer1Handler(void) {
 
     if (countsec == 5) {
         flag1S = 1;
-        //        updatetemp = 1;
+        updatetemp = 1;
         countsec = 0;
     }
 
     // .. things to do
-    //Verificar se alguma tecla está a ser premida
+    //Verificar se alguma tecla esta a ser premida
     keyPressed = 0;
     keyPressed = keyboardRead();
     ClrWdt();

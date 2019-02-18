@@ -9,8 +9,8 @@
  Software License Agreement:
 
  The software supplied herewith by Microchip Technology Incorporated
- (the “Company”) for its PIC® Microcontroller is intended and
- supplied to you, the Company’s customer, for use solely and
+ (the Company) for its PIC Microcontroller is intended and
+ supplied to you, the Companys customer, for use solely and
  exclusively on Microchip PIC Microcontroller products. The
  software is owned by the Company and/or its supplier, and is
  protected under applicable copyright laws. All rights are reserved.
@@ -19,7 +19,7 @@
  civil liability for the breach of the terms and conditions of this
  license.
 
- THIS SOFTWARE IS PROVIDED IN AN “AS IS” CONDITION. NO WARRANTIES,
+ THIS SOFTWARE IS PROVIDED IN AN AS IS CONDITION. NO WARRANTIES,
  WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED
  TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
  PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE COMPANY SHALL NOT,
@@ -47,15 +47,15 @@
 #define DEBUG_TC			//DEBUG da leitura dos termopares
 //#define DEBUG_FRAM
 //#define DEBUG_LCD
-//#define DEBUG_ADC
+#define DEBUG_ADC
 #define DEBUG_RTC			//DEBUG da RTC
 #define DEBUG_OUTPUTS		//DEBUG das saidas digitais (leds)
 //#define DEBUG_INPUTS		//DEBUG das entradas digitais
-//#define DEBUG_KEYBOARD  	//DEBUG do teclado de 9 botões
-//#define DEBUG_SD1			//DEBUG com as funções que criam um sistema de ficheiros no cartão
-//#define DEBUG_SD2			//DEBUG com as funções que escrevem diretamente na memória
-//#define DEBUG_SD3 		//DEBUG depois de se efectuarem alterações nos ficheiros .txt através do PC
-//#define DEBUG_CAN			//DEBUG das funções do CAN	
+//#define DEBUG_KEYBOARD  	//DEBUG do teclado de 9 botoes
+//#define DEBUG_SD1			//DEBUG com as funcoes que criam um sistema de ficheiros no cartao
+//#define DEBUG_SD2			//DEBUG com as funcoes que escrevem diretamente na memoria
+//#define DEBUG_SD3 		//DEBUG depois de se efectuarem alteracoes nos ficheiros .txt atraves do PC
+//#define DEBUG_CAN			//DEBUG das funcoes do CAN	
 
 
 
