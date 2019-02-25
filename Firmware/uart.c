@@ -85,6 +85,7 @@ void __ISR(_UART2_VECTOR, IPL2SOFT) IntUart2Handler(void)
                 (novo-> mensagem)[UART2RxBufLen] = '\0';
                 novo->next = head;
                 head = novo;
+                systemLedToggle();
             }
             UART2RxBufLen = 0;
         } else {

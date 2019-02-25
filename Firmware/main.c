@@ -209,64 +209,6 @@ extern unsigned char TESTE_DO_BRITO;
 
 /** DECLARATIONS ***************************************************/
 
-const char *DELIMITERS = {" /,"};
-
-/*
-led/1 on
-led/2 on
-led/3 on
-led/4 on
-led/5 on
-led/6 on
-led/7 on
-led/8 on
-led/9 on
-led/10 on
-led/11 on
-led/12 on
-led/13 on
-led/14 on
-led/15 on
-led/16 on
- * 
- * 
- * 
-led/1 off
-led/2 off
-led/3 off
-led/4 off
-led/5 off
-led/6 off
-led/7 off
-led/8 off
-led/9 off
-led/10 off
-led/11 off
-led/12 off
- * 
- * 
-led/10 on
-led/5 onled/12 on
-led/10 on
-led/5 on
- * 
- * 
-led/12 off
-led/10 off
-led/5 off
-led/20 on
-
- */
-// adc/1 10.1
-// buzzer/p 1
-// buzzer/p 3
-
-// dout/3 on
-// din/3 on ???
-
-// por fazer
-// time  ???
-
 void executaMensagem(char *mensagem) {
     char *partes[10];
     int numdepartes = 0, k;
@@ -289,57 +231,78 @@ void executaMensagem(char *mensagem) {
     //        printf("Parte: %s\n", partes[k]);
     //    }
 
-    // leds = digital output
-    // leds a funcionar: 3,4,6,7,9,10,14,15,16
-    if (numdepartes == 3 && strcmp(partes[0], "led") == 0) {
-        led = atoi(partes[1]);
+    // digital output <--> leds de status
+    // cafeina/dout/16 on
+    // dout a funcionar: 3,4,6,7,9,10,14,15,16
+    if (numdepartes == 4 && strcmp(partes[1], "dout") == 0) {
+        led = atoi(partes[2]);
         if (led >= 1 && led <= 17) {
-            if (strcmp(partes[2], "on") == 0) {
+            if (strcmp(partes[3], "on") == 0) {
                 ioOutputCtrl(led, 1);
             } else {
                 ioOutputCtrl(led, 0);
             }
-            printf("%s done\n", mensagem);
+            // printf("%s done\n", mensagem);
         }
     }
 
-    if (numdepartes == 2 && strcmp(partes[0], "din") == 0) {
-        din = atoi(partes[1]);
+    // digital output status
+    // cafeina/din/16
+    if (numdepartes == 3 && strcmp(partes[1], "din") == 0) {
+        din = atoi(partes[2]);
         if (din >= 1 && din <= 16) {
             dinstatus = ioInputStatus(din);
             // printf("Entrada %d status %d\n", din, dinstatus);
-            printf("din/%d %d\n", din, dinstatus);
+            printf("bicafe/din/%d %s\n", din, dinstatus ? "on" : "off");
             // printf("%s done\n", mensagem);
         }
     }
 
     // digital-to-analog (DAC)
-    // dacout/1 5.0
-    if (numdepartes == 3 && strcmp(partes[0], "dacout") == 0) {
-        dacout = atoi(partes[1]);
-        tensao = atof(partes[2]);
+    // cafeina/dacout/1 5.0
+    if (numdepartes == 4 && strcmp(partes[1], "dacout") == 0) {
+        dacout = atoi(partes[2]);
+        tensao = atof(partes[3]);
         if ((dacout >= 1 && dacout <= 2) && (tensao >= 0.0 && tensao <= 10.0)) {
             ioAnalogOutput(tensao, dacout);
             // printf("Tensao %f na saida DACOUT%d\n", tensao, dacout);
-            printf("%s done\n", mensagem);
+            // printf("%s done\n", mensagem);
         }
     }
 
-    if (numdepartes == 3 && strcmp(partes[0], "buzzer") == 0) {
-        if (strcmp(partes[1], "p") == 0) {
-            ciclos = atoi(partes[2]);
-            while (ciclos) {
-                buzzerCtrl(ON);
-                Delayms(50);
-                buzzerCtrl(OFF);
-                ciclos--;
-                if (ciclos)
-                    Delayms(100);
+    // dash é convencionalmente 3 vezes a duração do dot
+    // cafeina/buzzer/dot 2
+    if (numdepartes == 4 && strcmp(partes[1], "buzzer") == 0) {
+        if (strcmp(partes[2], "dot") == 0) {
+            ciclos = atoi(partes[3]);
+            if (ciclos > 0 && ciclos <= 12) {
+                while (ciclos) {
+                    buzzerCtrl(ON);
+                    Delayms(50);
+                    buzzerCtrl(OFF);
+                    ciclos--;
+                    if (ciclos)
+                        Delayms(100);
+                }
             }
-            printf("%s done\n", mensagem);
+        }
+        if (strcmp(partes[2], "dash") == 0) {
+            ciclos = atoi(partes[3]);
+            if (ciclos > 0 && ciclos <= 12) {
+                while (ciclos) {
+                    buzzerCtrl(ON);
+                    Delayms(150);
+                    buzzerCtrl(OFF);
+                    ciclos--;
+                    if (ciclos)
+                        Delayms(100);
+                }
+            }
         }
     }
-
+    buzzerCtrl(ON);
+    Delayms(50);
+    buzzerCtrl(OFF);
     free(copia);
 }
 
@@ -350,7 +313,7 @@ struct Node* processaMensagens(struct Node *cabeca) {
         return NULL;
     } else {
         if (cabeca->next == NULL) {
-            printf("%s todo\n", cabeca->mensagem);
+            // printf("debug/%s todo\n", cabeca->mensagem);
             executaMensagem(cabeca->mensagem);
             free(cabeca->mensagem);
             free(cabeca);
@@ -359,7 +322,7 @@ struct Node* processaMensagens(struct Node *cabeca) {
             penultimo = cabeca;
             while (penultimo->next->next != NULL)
                 penultimo = penultimo->next;
-            printf("%s todo\n", penultimo->next->mensagem);
+            // printf("debug/%s todo\n", penultimo->next->mensagem);
             executaMensagem(penultimo->next->mensagem);
             free(penultimo->next->mensagem);
             free(penultimo->next);
@@ -839,7 +802,7 @@ void UserInit(void) {
 
     /*Testing RTC***********************************************************************/
     rtcRead();
-//    rtcPrintTimeDate();
+    //    rtcPrintTimeDate();
 
     /*Initialize the variable holding the handle for the last transmission**************/
     USBOutHandle = 0;
@@ -961,7 +924,7 @@ void ProcessIO(void) {
     static unsigned char lcdon = 0;
     float temp;
     unsigned char dinstatus = 0;
-    static unsigned char dinstatus_anterior[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    static unsigned char dinstatus_anterior[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     static int anaCh_anterior[4] = {0, 0, 0, 0};
 
     if (updatetemp) {
@@ -991,7 +954,7 @@ void ProcessIO(void) {
         for (i = 0; i < 4; i++) {
             if (anaCh[i] != anaCh_anterior[i]) {
                 anaCh_anterior[i] = anaCh[i];
-                printf("adcout/%d %d\n", i, anaCh[i]);
+                printf("bicafe/adcin/%d %d\n", i, anaCh[i]);
             }
         }
 
@@ -999,9 +962,9 @@ void ProcessIO(void) {
 
         for (i = 1; i <= 16; i++) {
             dinstatus = ioInputStatus(i);
-            if (dinstatus != dinstatus_anterior[i-1]) {
-                dinstatus_anterior[i-1] = dinstatus;
-                printf("din/%d %d\n", i, dinstatus);
+            if (dinstatus != dinstatus_anterior[i - 1]) {
+                dinstatus_anterior[i - 1] = dinstatus;
+                printf("bicafe/din/%d %s\n", i, dinstatus ? "on" : "off");
             }
         }
 
@@ -1015,8 +978,9 @@ void ProcessIO(void) {
 
     // a cada minuto
     if (flag1Min) {
-//        printf("--Minuto--\n");
-        printf("time/interval/sec 60\n");
+        //        printf("--Minuto--\n");
+        printf("bicafe/time/interval/sec 60\n");
+        head = processaMensagens(head);
         flag1Min = 0;
     }
 
@@ -1037,7 +1001,7 @@ void updatetemperature() {
     if (temp < 40000.0f) {
         if (temp != temp_anterior_1) {
             temp_anterior_1 = temp;
-            printf("tmp/1 %.1f\n", temp);
+            printf("bicafe/tmp/1 %.1f\n", temp);
         }
     }
     temp = tcTempRead(2);
@@ -1045,7 +1009,7 @@ void updatetemperature() {
     if (temp < 40000.0f) {
         if (temp != temp_anterior_2) {
             temp_anterior_2 = temp;
-            printf("tmp/2 %.1f\n", temp);
+            printf("bicafe/tmp/2 %.1f\n", temp);
         }
     }
 #endif
