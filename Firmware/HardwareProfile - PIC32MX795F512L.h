@@ -130,8 +130,11 @@
 	#define CORE_TICK_RATE	       			(GetSystemClock()/2/TOGGLES_PER_SEC)
 
 	/* UART2 CONFIGURATION */
-	#define DESIRED_BAUDRATE              	(230400)      //The desired BaudRate
-	#define UART2_LEN						64
+	#define DESIRED_BAUDRATE              	(230400)  //The desired BaudRate
+	/* #define DESIRED_BAUDRATE              	(115200)      //The desired BaudRate */
+	/* #define DESIRED_BAUDRATE              	(57600)      //The desired BaudRate */
+	/* #define DESIRED_BAUDRATE              	(9600)      //The desired BaudRate */
+	#define UART2_LEN						128
 
 	/* I2C CONFIGURATION */
 	#define I2C_CLOCK_FREQ              	100000

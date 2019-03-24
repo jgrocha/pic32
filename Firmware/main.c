@@ -115,13 +115,15 @@ USB_HANDLE USBOutHandle = 0; //Needs to be initialized to 0 at startup.
 USB_HANDLE USBInHandle = 0; //Needs to be initialized to 0 at startup.
 BOOL blinkStatusValid = TRUE;
 
-//extern unsigned char UART2RxBuf;
-
-struct Node *head = NULL;
-
-extern unsigned char UART2RxBuf[64];
-
+extern unsigned char novo_char;
+extern unsigned char UARTBuf[CAIXAS][UART2_LEN];
+extern unsigned char UART2RxBuf[UART2_LEN];
 extern unsigned char UART2RxBufLen;
+
+extern unsigned int countinchar;
+extern unsigned int countin;
+extern unsigned int countindone;
+
 unsigned char str[20];
 
 unsigned char flag1S = 0, flag1Min = 0, flagKeys = 0, updatetemp = 0;
@@ -189,7 +191,7 @@ const ROM InquiryResponse inq_resp = {
 int li, lj;
 int aux = 0;
 unsigned int i;
-unsigned int count = 0;
+
 FSFILE * pointer;
 
 //CAN Fifo
@@ -205,10 +207,6 @@ void USBCBSendResume(void);
 void UserInit(void);
 void updatetemperature(void);
 
-extern unsigned char TESTE_DO_BRITO;
-
-/** DECLARATIONS ***************************************************/
-
 void executaMensagem(char *mensagem) {
     char *partes[10];
     int numdepartes = 0, k;
@@ -217,7 +215,7 @@ void executaMensagem(char *mensagem) {
     float tensao;
     unsigned char dinstatus = 0;
 
-    char* copia = strdup(mensagem);
+    char *copia = strdup(mensagem);
     char *token = strtok(copia, " /,");
 
     while (token != NULL) {
@@ -270,7 +268,7 @@ void executaMensagem(char *mensagem) {
         }
     }
 
-    // dash é convencionalmente 3 vezes a duração do dot
+    // dash = convencionalmente 3 vezes a duracao do dot
     // cafeina/buzzer/dot 2
     if (numdepartes == 4 && strcmp(partes[1], "buzzer") == 0) {
         if (strcmp(partes[2], "dot") == 0) {
@@ -300,47 +298,12 @@ void executaMensagem(char *mensagem) {
             }
         }
     }
+
     buzzerCtrl(ON);
     Delayms(50);
     buzzerCtrl(OFF);
+
     free(copia);
-}
-
-struct Node* processaMensagens(struct Node *cabeca) {
-    int k = 0;
-    struct Node *penultimo;
-    if (cabeca == NULL) {
-        return NULL;
-    } else {
-        if (cabeca->next == NULL) {
-            // printf("debug/%s todo\n", cabeca->mensagem);
-            executaMensagem(cabeca->mensagem);
-            free(cabeca->mensagem);
-            free(cabeca);
-            return NULL;
-        } else {
-            penultimo = cabeca;
-            while (penultimo->next->next != NULL)
-                penultimo = penultimo->next;
-            // printf("debug/%s todo\n", penultimo->next->mensagem);
-            executaMensagem(penultimo->next->mensagem);
-            free(penultimo->next->mensagem);
-            free(penultimo->next);
-            penultimo->next = NULL;
-            return cabeca;
-        }
-    }
-}
-
-void imprimeListaMensagens(struct Node *n) {
-    int k = 0;
-    printf("---8<-------------------------------------------------------\n");
-    while (n != NULL) {
-        printf("Mensagem %d: %s\n", k, n->mensagem);
-        n = n->next;
-        k++;
-    }
-    printf("---8<-------------------------------------------------------\n");
 }
 
 /********************************************************************
@@ -951,6 +914,9 @@ void ProcessIO(void) {
 #ifdef DEBUG_ADC
         //        printf("\nLEITURA DAS ENTRADAS ANALOGICAS: \n");
         //        printf("\nADC:\t\t%d\t%d\t%d\t%d\t%d\n", anaCh[0], anaCh[1], anaCh[2], anaCh[3], anaCh[4]);
+        // falta por aqui um filtro de kalman...
+        // usar a média ponderada das últimas 5 medições?
+        // com os pesos 1 2 3 4 5 (mais recente) tem mais peso...
         for (i = 0; i < 4; i++) {
             if (anaCh[i] != anaCh_anterior[i]) {
                 anaCh_anterior[i] = anaCh[i];
@@ -968,20 +934,24 @@ void ProcessIO(void) {
             }
         }
 
-        // imprimeListaMensagens(head);
-        // head = processaMensagens(head);
-        while (head != NULL)
-            head = processaMensagens(head);
+        while (countindone < countin) {
+            printf("debug/msg/%d %d %s\n", countindone, strlen(UARTBuf[countindone % CAIXAS]), UARTBuf[countindone % CAIXAS]);
+            executaMensagem(UARTBuf[countindone % CAIXAS]);
+            countindone++;
+        }
 
         flag1S = 0;
     }
 
     // a cada minuto
     if (flag1Min) {
-        //        printf("--Minuto--\n");
         printf("bicafe/time/interval/sec 60\n");
-        head = processaMensagens(head);
+        printf("bicafe/count/in/msg %d\n", countin);
+
         flag1Min = 0;
+
+        /* INTEnableSystemMultiVectoredInt();
+        INTEnableInterrupts(); */
     }
 
     // User Application USB tasks
@@ -1060,21 +1030,6 @@ void __ISR(_TIMER_1_VECTOR, IPL2AUTO) Timer1Handler(void) {
         countsec = 0;
     }
 
-    // .. things to do
-    //Verificar se alguma tecla esta a ser premida
-    keyPressed = 0;
-    keyPressed = keyboardRead();
-    ClrWdt();
-
-    if (keyPressed != 0) {
-        GLCD_GoTo(16, 4);
-        sprintf(str, "  ");
-        GLCD_WriteString(str, 1);
-        sprintf(str, "%d%", keyPressed);
-        GLCD_GoTo(16, 4);
-        GLCD_WriteString(str, 1);
-        printf("\r\nTecla pressionada: %d% \n", keyPressed);
-    }
     // clear the interrupt flag
     mT1ClearIntFlag();
 
@@ -1090,7 +1045,7 @@ void __ISR(_TIMER_1_VECTOR, IPL2AUTO) Timer1Handler(void) {
 /* Timer 2 ISR */
 
 /* Specify Interrupt Priority Level = 2, Vector 8 */
-void __ISR(8, ipl2) _Timer2Handler(void) {
+void __ISR(8, IPL2SOFT) _Timer2Handler(void) {
     // clear the interrupt flag
     mT2ClearIntFlag();
 
@@ -1100,14 +1055,14 @@ void __ISR(8, ipl2) _Timer2Handler(void) {
 /* Timer 3 ISR */
 
 /* Specify Interrupt Priority Level = 2, Vector 12 */
-void __ISR(12, ipl2) _Timer3Handler(void) {
+void __ISR(12, IPL2SOFT) _Timer3Handler(void) {
     // clear the interrupt flag
     mT3ClearIntFlag();
 
     // .. things to do ..
 }
 
-void __ISR(10, ipl5) _OC2Handler(void) {
+void __ISR(10, IPL2SOFT) _OC2Handler(void) {
     // clear the interrupt flag
     mOC2ClearIntFlag();
 

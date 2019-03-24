@@ -21,9 +21,5 @@ void UART2PutCharacter(const char character);
 
 #endif
 
-struct Node  
-{ 
-  // char mensagem[64];  
-  char * mensagem;
-  struct Node *next; 
-}; 
+#define CAIXAS 50 //  5 para teste (funcionou)
+#define MAXMSG 128
